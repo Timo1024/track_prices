@@ -1,0 +1,33 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db # This correctly uses the service name "db" as hostname
+      - DB_USER=price_tracker
+      - DB_PASSWORD=password
+      - DB_NAME=price_tracker_db
+    depends_on:
+      - db # This ensures backend only starts after db service is ready
+    # Changed volume mounting to allow for development but not override app.py
+    volumes:
+      - ./backend/db:/app/db
+    restart: always
+
+  db:
+    image: mysql:8.0
+    ports:
+      - "3307:3306" # Changed from 3306:3306 to avoid port conflict
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=price_tracker_db
+      - MYSQL_USER=price_tracker
+      - MYSQL_PASSWORD=password
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: always
+
+volumes:
+  mysql_data:
